@@ -8,10 +8,16 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
-class MessageRecieved implements ShouldBroadcast
+class CommentPostedEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public $item;
+
+    public function __construct($item)
+    {
+        $this->item = $item;
+    }
 
     /**
      * Get the channels the event should broadcast on.
@@ -20,13 +26,13 @@ class MessageRecieved implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new Channel('test');
+        return new Channel('comment-channel_' . $this->item->idea_id);
     }
 
     public function broadcastWith()
     {
         return [
-            'data' => 'test',
+            'item' => $this->item->toArray(),
         ];
     }
 }

@@ -3,6 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
+use App\Http\Controllers\API\IdeaController;
+use App\Http\Controllers\API\CommentController;
+
 /*
 |--------------------------------------------------------------------------
 | API Routes
@@ -14,6 +17,19 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
-    return $request->user();
+Route::middleware(['api'])->group(function () {
+  Route::prefix('/idea')->group(function () {
+    Route::get('', [IdeaController::class, 'index']);
+    Route::get('/{id}', [IdeaController::class, 'show']);
+    Route::post('', [IdeaController::class, 'store']);
+    Route::put('/{idea}', [IdeaController::class, 'update']);
+    Route::delete('/{idea}', [IdeaController::class, 'delete']);
+  });
+  Route::prefix('/comment')->group(function () {
+    Route::get('', [CommentController::class, 'index']);
+    Route::get('/{id}', [CommentController::class, 'show']);
+    Route::post('', [CommentController::class, 'store']);
+    Route::put('/{comment}', [CommentController::class, 'update']);
+    Route::delete('/{comment}', [CommentController::class, 'delete']);
+  });
 });
