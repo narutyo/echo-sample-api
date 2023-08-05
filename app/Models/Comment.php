@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\CommentPostedEvent;
+use App\Events\CommentDeletedEvent;
 
 class Comment extends BaseModel
 {
@@ -43,7 +44,7 @@ class Comment extends BaseModel
     $model = self::create($input)->fresh();
     $idea = $model->{self::IDEA}()->first();
     event(new CommentPostedEvent($model));
-    Idea::generateJson($idea);
+    Idea::generateCommentJson($idea);
     return $model;
   }
 
@@ -52,13 +53,16 @@ class Comment extends BaseModel
     $model->update($input);
     $idea = $model->{self::IDEA}()->first();
     event(new CommentPostedEvent($model));
-    Idea::generateJson($idea);
+    Idea::generateCommentJson($idea);
     return $model;
   }
 
   public static function del($model)
   {
+    $idea = $model->{self::IDEA}()->first();
     $model->delete();
+    event(new CommentDeletedEvent($model));
+    Idea::generateCommentJson($idea);
     return $model;
   }  
 }

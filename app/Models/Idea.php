@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Support\Facades\Storage;
+use App\Events\IdeaPostedEvent;
+use App\Events\IdeaDeletedEvent;
 
 class Idea extends BaseModel
 {
@@ -41,25 +43,39 @@ class Idea extends BaseModel
   public static function add($input)
   {
     $model = self::create($input)->fresh();
-    self::generateJson($model);
+    event(new IdeaPostedEvent($model));
+    self::generateIdeaJson();
+    self::generateCommentJson($model);
     return $model;
   }
 
   public static function edit($input, $model)
   {
     $model->update($input);
-    self::generateJson($model);
+    event(new IdeaPostedEvent($model));
+    self::generateIdeaJson();
+    self::generateCommentJson($model);
     return $model;
   }
 
   public static function del($model)
   {
-    Storage::disk('public')->delete($model->id.'.json');
+    Storage::disk('public')->delete('comment_'.$model->id.'.json');
     $model->delete();
+    event(new IdeaDeletedEvent($model));
+    self::generateIdeaJson();
     return $model;
   }
 
-  public static function generateJson($model)
+  public static function generateIdeaJson()
+  {
+    $json = array();
+    $json['ideas'] = self::orderBy(self::UPDATED_AT, 'DESC')->get()->toArray();
+
+    Storage::disk('public')->put('ideas.json', json_encode($json));
+  }
+
+  public static function generateCommentJson($model)
   {
     $json = array();
     $json['idea'] = array(
@@ -70,6 +86,6 @@ class Idea extends BaseModel
     );
     $json['comments'] = $model->{self::COMMENTS}()->get()->toArray();
 
-    Storage::disk('public')->put($model->id.'.json', json_encode($json));
+    Storage::disk('public')->put('comment_'.$model->id.'.json', json_encode($json));
   }
 }
